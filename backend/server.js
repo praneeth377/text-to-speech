@@ -10,6 +10,7 @@ const transcriptionRoutes = require('./routes/transcriptionRoutes');
 const { handleLiveConnection } = require('./controllers/liveTranscriptionController');
 
 const PORT = process.env.PORT || 3000;
+// Extra origin allowed to call the API from another domain (local Angular dev server by default).
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:4200';
 
 const app = express();
@@ -31,14 +32,29 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong' });
 });
 
+/**
+ * Only our own frontend may open a transcription session (it uses our Gemini quota).
+ * Allowed: pages served from the same host (production and every preview on Vercel,
+ * or the Angular dev-server proxy locally), plus CLIENT_ORIGIN.
+ */
+function isAllowedOrigin({ origin, req }) {
+  if (!origin) return false;
+  if (origin === CLIENT_ORIGIN) return true;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
 // One HTTP server for both the REST API and the live-transcription WebSocket.
 const server = http.createServer(app);
 const wss = new WebSocketServer({
   server,
   path: '/ws/transcribe',
   maxPayload: 1024 * 1024, // audio chunks are ~3 KB; reject anything huge
-  // Only our frontend may open a transcription session (it uses our Gemini quota).
-  verifyClient: ({ origin }) => origin === CLIENT_ORIGIN,
+  verifyClient: isAllowedOrigin,
 });
 wss.on('connection', handleLiveConnection);
 
@@ -46,6 +62,11 @@ initDb()
   .then(() => console.log('Database ready'))
   .catch((err) => console.error('Database not ready:', err.message));
 
-server.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
+// Locally (`node server.js`) we listen on PORT. On Vercel the exported server is used instead.
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`Backend running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = server;

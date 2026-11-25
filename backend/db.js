@@ -1,7 +1,12 @@
 const { Pool } = require('pg');
+const { attachDatabasePool } = require('@vercel/functions');
 
-// pg reads PGHOST, PGPORT, PGUSER, PGPASSWORD and PGDATABASE from .env automatically.
-const pool = new Pool();
+// On Vercel, the Neon integration provides DATABASE_URL (a pooled connection string with SSL).
+// Locally, pg reads PGHOST, PGPORT, PGUSER, PGPASSWORD and PGDATABASE from .env instead.
+const pool = new Pool(process.env.DATABASE_URL ? { connectionString: process.env.DATABASE_URL } : {});
+
+// On Vercel, closes idle connections before the function instance is suspended. No-op locally.
+attachDatabasePool(pool);
 
 // An idle connection can drop (e.g. Postgres restarts). Log it instead of crashing the server.
 pool.on('error', (err) => console.error('PostgreSQL pool error:', err.message));

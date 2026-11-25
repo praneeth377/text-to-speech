@@ -1,6 +1,6 @@
 import { Component, OnDestroy, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { WS_URL } from '../config';
+import { getWebSocketUrl } from '../config';
 import { TranscriptionService } from '../transcription.service';
 
 type Status = 'idle' | 'connecting' | 'recording' | 'finishing';
@@ -62,7 +62,7 @@ export class RecorderComponent implements OnDestroy {
     }
     this.stream = stream;
 
-    this.ws = new WebSocket(WS_URL);
+    this.ws = new WebSocket(getWebSocketUrl());
     this.ws.binaryType = 'arraybuffer';
     this.ws.onopen = () => this.startAudio();
     this.ws.onmessage = (event) => this.handleMessage(event.data);
