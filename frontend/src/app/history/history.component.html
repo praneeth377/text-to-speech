@@ -1,0 +1,125 @@
+<section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200" aria-labelledby="history-heading">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 id="history-heading" class="text-lg font-semibold text-slate-900">
+      History
+      <span class="ml-1 text-sm font-normal text-slate-500">({{ items().length }})</span>
+    </h2>
+    <div class="w-full sm:w-64">
+      <label for="history-search" class="sr-only">Search transcriptions</label>
+      <input
+        id="history-search"
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="onSearch($event)"
+        placeholder="Search transcriptions…"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+      />
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error() }}</p>
+  }
+
+  <ul class="mt-5 space-y-3">
+    @for (item of items(); track item.id) {
+      <li class="rounded-xl p-4 ring-1 ring-slate-200">
+        @if (editingId() === item.id) {
+          <div class="space-y-3">
+            <div>
+              <label [for]="'edit-title-' + item.id" class="mb-1 block text-xs font-medium text-slate-600">
+                Title
+              </label>
+              <input
+                [id]="'edit-title-' + item.id"
+                type="text"
+                [(ngModel)]="editTitle"
+                maxlength="200"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+            <div>
+              <label [for]="'edit-text-' + item.id" class="mb-1 block text-xs font-medium text-slate-600">
+                Transcription
+              </label>
+              <textarea
+                [id]="'edit-text-' + item.id"
+                [(ngModel)]="editText"
+                rows="4"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              ></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button
+                type="button"
+                (click)="cancelEdit()"
+                class="rounded-lg px-3 py-1.5 text-sm text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                (click)="saveEdit(item.id)"
+                [disabled]="!editText().trim()"
+                class="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h3 class="truncate font-medium text-slate-900">{{ item.title }}</h3>
+              <p class="mt-0.5 text-xs text-slate-500">
+                {{ item.created_at | date: 'medium' }} · {{ formatDuration(item.duration_seconds) }}
+                @if (item.updated_at !== item.created_at) {
+                  · edited
+                }
+              </p>
+            </div>
+            <div class="flex shrink-0 gap-1">
+              <button
+                type="button"
+                (click)="speak(item)"
+                [attr.aria-label]="(speakingId() === item.id ? 'Stop reading ' : 'Read aloud ') + item.title"
+                class="rounded-md px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+              >
+                {{ speakingId() === item.id ? 'Stop' : 'Listen' }}
+              </button>
+              <button
+                type="button"
+                (click)="copy(item)"
+                [attr.aria-label]="'Copy ' + item.title"
+                class="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+              >
+                {{ copiedId() === item.id ? 'Copied!' : 'Copy' }}
+              </button>
+              <button
+                type="button"
+                (click)="startEdit(item)"
+                [attr.aria-label]="'Edit ' + item.title"
+                class="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                (click)="remove(item)"
+                [attr.aria-label]="'Delete ' + item.title"
+                class="rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+          <p class="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{{ item.text }}</p>
+        }
+      </li>
+    } @empty {
+      @if (!error()) {
+        <li class="py-10 text-center text-sm text-slate-500">{{ emptyMessage() }}</li>
+      }
+    }
+  </ul>
+</section>

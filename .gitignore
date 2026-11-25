@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Secrets — never commit real keys or passwords (backend/.env.example is the template)
+.env
+.env.*
+!.env.example
+
+# Build output and caches
+dist/
+.angular/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS / local tooling
+.claude/
+.idea/
+.DS_Store
+Thumbs.db

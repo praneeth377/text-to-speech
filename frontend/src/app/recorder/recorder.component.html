@@ -1,0 +1,93 @@
+<section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200" aria-labelledby="recorder-heading">
+  <div class="flex items-center justify-between">
+    <h2 id="recorder-heading" class="text-lg font-semibold text-slate-900">Live transcription</h2>
+    @if (status() === 'recording') {
+      <span class="flex items-center gap-2 text-sm font-medium text-red-600">
+        <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-red-600"></span>
+        Recording {{ timer() }}
+      </span>
+    } @else if (status() === 'connecting') {
+      <span class="text-sm text-slate-500">Connecting…</span>
+    } @else if (status() === 'finishing') {
+      <span class="text-sm text-slate-500">Finishing…</span>
+    }
+  </div>
+  <p class="mt-1 text-sm text-slate-500">Speak in Hindi, English, or a mix of both.</p>
+
+  <div class="mt-5 flex justify-center">
+    @if (status() === 'recording' || status() === 'connecting') {
+      <button
+        type="button"
+        (click)="stop()"
+        class="flex h-20 w-20 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition hover:bg-red-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300"
+        aria-label="Stop recording"
+      >
+        <span class="h-6 w-6 rounded-sm bg-white" aria-hidden="true"></span>
+      </button>
+    } @else {
+      <button
+        type="button"
+        (click)="start()"
+        [disabled]="status() === 'finishing'"
+        class="flex h-20 w-20 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition hover:bg-indigo-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Start recording"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-8 w-8" aria-hidden="true">
+          <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Z" />
+          <path
+            d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2.07A7 7 0 0 0 19 11Z"
+          />
+        </svg>
+      </button>
+    }
+  </div>
+
+  <div
+    class="mt-5 min-h-36 rounded-xl bg-slate-50 p-4 text-base leading-relaxed ring-1 ring-slate-200"
+    aria-live="polite"
+  >
+    @if (finalText() || interimText()) {
+      <span class="text-slate-900">{{ finalText() }}</span>
+      <span class="text-slate-400"> {{ interimText() }}</span>
+    } @else {
+      <span class="text-slate-400">
+        {{ isBusy() ? 'Listening…' : 'Press the microphone and start speaking.' }}
+      </span>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error() }}</p>
+  }
+
+  @if (status() === 'idle' && hasText()) {
+    <div class="mt-5 space-y-3">
+      <label for="recording-title" class="sr-only">Title (optional)</label>
+      <input
+        id="recording-title"
+        type="text"
+        [(ngModel)]="title"
+        placeholder="Title (optional)"
+        maxlength="200"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+      />
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="save()"
+          [disabled]="saving()"
+          class="flex-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+        >
+          {{ saving() ? 'Saving…' : 'Save transcription' }}
+        </button>
+        <button
+          type="button"
+          (click)="discard()"
+          class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50"
+        >
+          Discard
+        </button>
+      </div>
+    </div>
+  }
+</section>
