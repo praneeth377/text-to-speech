@@ -77,7 +77,8 @@ Requirements: Node.js 22.22+ (26 LTS recommended), PostgreSQL 16, and a Gemini A
    npm run dev
    ```
 
-4. **Start the frontend** in a second terminal (http://localhost:4200)
+4. **Start the frontend** in a second terminal (http://localhost:4200). The dev server
+   forwards `/api` and `/ws` to the backend (see `frontend/proxy.conf.json`).
 
    ```powershell
    cd frontend
@@ -96,6 +97,27 @@ cd frontend
 npm test                                          # watch mode, opens Chrome
 npx ng test --watch=false --browsers=ChromeHeadless  # single run
 ```
+
+## Deployment (Vercel)
+
+The app deploys as one Vercel project using [Vercel Services](https://vercel.com/docs/services)
+(Beta), configured in [`vercel.json`](vercel.json):
+
+| Path      | Goes to                                      |
+| --------- | -------------------------------------------- |
+| `/api/*`  | `backend` — Express on Vercel Functions      |
+| `/ws/*`   | `backend` — live-transcription WebSocket     |
+| `/*`      | `frontend` — static Angular build            |
+
+Because both are on the same domain, the frontend calls relative URLs and needs no CORS setup.
+
+- **Database:** Neon Postgres from the Vercel Marketplace. It sets `DATABASE_URL`, which
+  `backend/db.js` uses when present. The table is created automatically on first start.
+- **Environment variables:** `GEMINI_API_KEY` (set in the Vercel dashboard) and `DATABASE_URL`
+  (set by Neon). `GEMINI_MODEL` and `LANGUAGE_CODES` are optional.
+- **Deploys:** every push to `main` deploys to production; other branches get preview URLs.
+- **Limit:** on the Hobby plan a function runs for at most 5 minutes, so one live recording
+  is capped at about 5 minutes (the text so far is kept).
 
 ## REST API
 
